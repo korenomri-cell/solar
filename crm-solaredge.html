@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="לידים שלי"/>
+<title>הלידים שלי</title>
+<style>
+:root {
+  --bg: #F7F7F5;
+  --bg2: #EFEFEC;
+  --card: #FFFFFF;
+  --border: #E2E2DC;
+  --border2: #D0D0C8;
+  --text: #1A1A18;
+  --text2: #6B6B65;
+  --text3: #9B9B94;
+  --accent: #FF5C1A;
+  --green: #1D9E75;
+  --blue: #2E7DD1;
+  --red: #D84030;
+  --yellow: #D4860A;
+  --radius: 14px;
+  --radius-sm: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+input, select, textarea, button { font-family: inherit; font-size: 16px; }
+input, select, textarea { background: var(--bg); border: 1px solid var(--border2); border-radius: var(--radius-sm); padding: 10px 12px; color: var(--text); width: 100%; outline: none; }
+input:focus, select:focus, textarea:focus { border-color: var(--blue); }
+textarea { resize: vertical; min-height: 70px; }
+
+/* Header */
+.header { background: var(--card); border-bottom: 1px solid var(--border); padding: 14px 16px 12px; position: sticky; top: 0; z-index: 50; }
+.header-row { display: flex; align-items: center; justify-content: space-between; }
+.header h1 { font-size: 20px; font-weight: 700; color: var(--text); }
+.header-date { font-size: 12px; color: var(--text3); margin-top: 2px; }
+.header-actions { display: flex; gap: 8px; }
+.hdr-btn { font-size: 12px; padding: 6px 11px; border-radius: 20px; border: 1px solid var(--border2); background: transparent; color: var(--text2); cursor: pointer; white-space: nowrap; }
+.hdr-btn.green { border-color: var(--green); color: var(--green); }
+.hdr-btn.blue { border-color: var(--blue); color: var(--blue); }
+
+/* Stats */
+.stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; padding: 14px 16px; }
+.stat { background: var(--card); border-radius: var(--radius); padding: 12px 14px; border: 1px solid var(--border); }
+.stat-label { font-size: 11px; color: var(--text3); margin-bottom: 4px; }
+.stat-val { font-size: 26px; font-weight: 700; color: var(--text); }
+.stat-val.red { color: var(--red); }
+.stat-val.green { color: var(--green); }
+
+/* Filters */
+.filters { display: flex; gap: 8px; padding: 0 16px 14px; overflow-x: auto; scrollbar-width: none; }
+.filters::-webkit-scrollbar { display: none; }
+.filter-btn { font-size: 13px; padding: 7px 16px; border-radius: 20px; border: 1px solid var(--border2); background: transparent; color: var(--text2); cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+.filter-btn.active { background: var(--text); color: #fff; border-color: var(--text); }
+
+/* Leads */
+.leads { padding: 0 16px; display: flex; flex-direction: column; gap: 10px; }
+.lead-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; position: relative; overflow: hidden; }
+.lead-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background: transparent; }
+.lead-card.urgent::before { background: var(--red); }
+.lead-card.today::before { background: var(--green); }
+.lead-card.upcoming::before { background: var(--blue); }
+.avatar { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; flex-shrink: 0; }
+.av-0{background:#FAECE7;color:#993C1D} .av-1{background:#E1F5EE;color:#0F6E56} .av-2{background:#E6F1FB;color:#185FA5} .av-3{background:#EEEDFE;color:#534AB7} .av-4{background:#FBEAF0;color:#993556}
+.lead-info { flex: 1; min-width: 0; }
+.lead-name { font-size: 16px; font-weight: 600; color: var(--text); }
+.lead-sub { font-size: 12px; color: var(--text3); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lead-right { text-align: left; flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 5px; }
+.lead-date { font-size: 12px; font-weight: 600; }
+.d-urgent{color:var(--red)} .d-today{color:var(--green)} .d-upcoming{color:var(--blue)} .d-future{color:var(--text3)}
+.status-pill { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 600; border: none; cursor: pointer; }
+.s-new{background:#E6F1FB;color:#185FA5} .s-contacted{background:#EEEDFE;color:#534AB7} .s-interested{background:#E1F5EE;color:#0F6E56} .s-negotiation{background:#FEF3E2;color:#854F0B} .s-deposit{background:#EAF3DE;color:#3B6D11} .s-closed{background:#D6F5EC;color:#085041} .s-irrelevant{background:#F1EFE8;color:#5F5E5A}
+.lead-actions-row { display: flex; gap: 6px; margin-top: 2px; }
+.circle-btn { width: 32px; height: 32px; border-radius: 50%; border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; flex-shrink: 0; }
+.circle-btn.wa { background: #25D366; }
+.circle-btn.call { background: var(--blue); }
+.circle-btn svg { width: 15px; height: 15px; fill: white; }
+
+/* Add button */
+.add-wrap { padding: 14px 16px 32px; }
+.add-btn { width: 100%; padding: 14px; border-radius: var(--radius); border: 1.5px dashed var(--border2); background: transparent; color: var(--text2); font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+
+/* Popups */
+.popup-overlay { position: fixed; inset: 0; z-index: 100; display: none; }
+.popup-overlay.open { display: block; }
+.popup { position: fixed; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 8px; z-index: 200; display: none; flex-direction: column; gap: 2px; min-width: 160px; box-shadow: 0 8px 32px rgba(0,0,0,0.12); }
+.popup.open { display: flex; }
+.popup-item { font-size: 15px; padding: 10px 14px; border-radius: var(--radius-sm); border: none; background: transparent; cursor: pointer; text-align: right; color: var(--text); }
+.popup-item:hover, .popup-item:active { background: var(--bg2); }
+.popup-title { font-size: 11px; color: var(--text3); padding: 6px 14px 4px; }
+.popup-divider { border: none; border-top: 1px solid var(--border); margin: 4px 0; }
+.date-custom-row { display: flex; gap: 8px; padding: 4px 8px 6px; }
+.date-custom-row input { flex: 1; font-size: 14px; padding: 8px 10px; }
+.date-custom-row button { font-size: 14px; padding: 8px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border2); background: var(--bg); cursor: pointer; color: var(--text); white-space: nowrap; }
+
+/* Sheet (bottom drawer) */
+.sheet-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 300; display: none; }
+.sheet-overlay.open { display: block; }
+.sheet { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); border-radius: var(--radius) var(--radius) 0 0; z-index: 400; max-height: 92vh; overflow-y: auto; padding-bottom: env(safe-area-inset-bottom, 16px); transform: translateY(100%); transition: transform 0.28s cubic-bezier(0.32,0.72,0,1); }
+.sheet.open { transform: translateY(0); }
+.sheet-handle { width: 40px; height: 4px; background: var(--border2); border-radius: 2px; margin: 12px auto 0; }
+.sheet-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 10px; border-bottom: 1px solid var(--border); }
+.sheet-title { font-size: 18px; font-weight: 700; }
+.sheet-close { width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--bg2); cursor: pointer; font-size: 18px; color: var(--text2); display: flex; align-items: center; justify-content: center; }
+.sheet-body { padding: 16px; }
+.field-label { font-size: 13px; color: var(--text2); margin-bottom: 5px; margin-top: 14px; font-weight: 500; }
+.field-label:first-child { margin-top: 0; }
+.section-title { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 20px; margin-bottom: 8px; padding-top: 16px; border-top: 1px solid var(--border); }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.sheet-actions { display: flex; gap: 10px; margin-top: 20px; }
+.btn-main { flex: 1; padding: 14px; border-radius: var(--radius); border: none; background: var(--text); color: #fff; font-size: 16px; font-weight: 600; cursor: pointer; }
+.btn-cancel { padding: 14px 20px; border-radius: var(--radius); border: 1px solid var(--border2); background: transparent; color: var(--text2); font-size: 16px; cursor: pointer; }
+
+/* Detail sheet */
+.detail-avatar-row { display: flex; align-items: center; gap: 14px; padding: 16px 16px 14px; border-bottom: 1px solid var(--border); }
+.detail-avatar { width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; flex-shrink: 0; }
+.detail-name { font-size: 20px; font-weight: 700; }
+.detail-status { margin-top: 4px; }
+.quick-actions { display: flex; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--border); }
+.qa-btn { flex: 1; padding: 12px 8px; border-radius: var(--radius-sm); border: 1px solid var(--border2); background: transparent; color: var(--text); font-size: 13px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; font-weight: 500; text-decoration: none; }
+.qa-btn.wa-btn { background: #25D366; border-color: #25D366; color: white; }
+.qa-btn.call-btn { background: var(--blue); border-color: var(--blue); color: white; }
+.qa-btn svg { width: 20px; height: 20px; }
+.qa-btn.wa-btn svg, .qa-btn.call-btn svg { fill: white; }
+.qa-btn svg { fill: var(--text2); }
+.detail-fields { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.detail-row { display: flex; gap: 10px; align-items: flex-start; }
+.detail-icon { width: 20px; flex-shrink: 0; text-align: center; font-size: 15px; margin-top: 1px; }
+.detail-val { font-size: 15px; color: var(--text); flex: 1; line-height: 1.4; }
+.detail-key { font-size: 12px; color: var(--text3); }
+.detail-mgmt { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 16px 16px; }
+.dmgmt-btn { font-size: 13px; padding: 9px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border2); background: transparent; color: var(--text); cursor: pointer; display: flex; align-items: center; gap: 6px; }
+.dmgmt-btn.danger { color: var(--red); border-color: var(--red); }
+
+/* Import sheet */
+.drop-zone { border: 2px dashed var(--border2); border-radius: var(--radius); padding: 32px 20px; text-align: center; cursor: pointer; color: var(--text2); font-size: 15px; margin-bottom: 12px; }
+.drop-zone.active { border-color: var(--blue); background: #E6F1FB20; }
+.import-preview { font-size: 13px; color: var(--text2); margin-top: 10px; }
+.import-preview table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+.import-preview th, .import-preview td { border: 1px solid var(--border); padding: 6px 8px; text-align: right; font-size: 12px; }
+.import-preview th { background: var(--bg2); }
+
+/* Toast */
+.toast { position: fixed; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%) translateY(20px); background: #1A1A18; color: #fff; padding: 12px 22px; border-radius: 30px; font-size: 14px; z-index: 999; opacity: 0; transition: opacity 0.25s, transform 0.25s; pointer-events: none; white-space: nowrap; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+.empty { text-align: center; padding: 40px 20px; color: var(--text3); }
+.empty-icon { font-size: 40px; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-row">
+    <div>
+      <h1>הלידים שלי ☀️</h1>
+      <div class="header-date" id="today-date"></div>
+    </div>
+    <div class="header-actions">
+      <button class="hdr-btn blue" onclick="openImport()">⬆️ ייבא</button>
+      <button class="hdr-btn green" onclick="exportExcel()">⬇️ ייצא</button>
+    </div>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="stat-label">סה"כ</div><div class="stat-val" id="st-total">0</div></div>
+  <div class="stat"><div class="stat-label">בוערים</div><div class="stat-val red" id="st-urgent">0</div></div>
+  <div class="stat"><div class="stat-label">השבוע</div><div class="stat-val green" id="st-week">0</div></div>
+</div>
+
+<div class="filters">
+  <button class="filter-btn active" onclick="setFilter('all',this)">הכל</button>
+  <button class="filter-btn" onclick="setFilter('urgent',this)">🔴 בוערים</button>
+  <button class="filter-btn" onclick="setFilter('today',this)">🟢 היום</button>
+  <button class="filter-btn" onclick="setFilter('upcoming',this)">🔵 השבוע</button>
+  <button class="filter-btn" onclick="setFilter('future',this)">⚪ עתידי</button>
+</div>
+
+<div class="leads" id="leads-list"></div>
+
+<div class="add-wrap">
+  <button class="add-btn" onclick="openAddSheet()">+ הוסף ליד חדש</button>
+</div>
+
+<!-- Status popup -->
+<div class="popup-overlay" id="status-overlay" onclick="closePopups()"></div>
+<div class="popup" id="status-popup">
+  <div class="popup-title">שנה סטטוס</div>
+  <button class="popup-item" onclick="setStatus('new')">חדש</button>
+  <button class="popup-item" onclick="setStatus('contacted')">יצרתי קשר</button>
+  <button class="popup-item" onclick="setStatus('interested')">מתעניין</button>
+  <button class="popup-item" onclick="setStatus('negotiation')">במשא ומתן</button>
+  <button class="popup-item" onclick="setStatus('deposit')">שילם מקדמה</button>
+  <button class="popup-item" onclick="setStatus('closed')">סגרתי עסקה</button>
+  <hr class="popup-divider">
+  <button class="popup-item" onclick="setStatus('irrelevant')" style="color:var(--text3)">לא רלוונטי</button>
+</div>
+
+<!-- Date popup -->
+<div class="popup-overlay" id="date-overlay" onclick="closePopups()"></div>
+<div class="popup" id="date-popup" style="min-width:220px">
+  <div class="popup-title">מתי לחזור?</div>
+  <button class="popup-item" onclick="setDate(0)">היום</button>
+  <button class="popup-item" onclick="setDate(1)">מחר</button>
+  <button class="popup-item" onclick="setDate(3)">בעוד 3 ימים</button>
+  <button class="popup-item" onclick="setDate(7)">בעוד שבוע</button>
+  <button class="popup-item" onclick="setDate(14)">בעוד שבועיים</button>
+  <button class="popup-item" onclick="setDate(30)">בעוד חודש</button>
+  <hr class="popup-divider">
+  <div class="date-custom-row">
+    <input type="date" id="custom-date-input"/>
+    <button onclick="setCustomDate()">קבע</button>
+  </div>
+</div>
+
+<!-- Add/Edit Sheet -->
+<div class="sheet-overlay" id="form-overlay" onclick="closeFormSheet()"></div>
+<div class="sheet" id="form-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <span class="sheet-title" id="form-title">ליד חדש</span>
+    <button class="sheet-close" onclick="closeFormSheet()">✕</button>
+  </div>
+  <div class="sheet-body">
+    <div class="section-title" style="margin-top:0;padding-top:0;border-top:none">פרטי קשר</div>
+    <div class="field-label">שם מלא *</div>
+    <input type="text" id="f-name" placeholder="שם הלקוח"/>
+    <div class="row2" style="margin-top:10px">
+      <div>
+        <div class="field-label">טלפון</div>
+        <input type="tel" id="f-phone" placeholder="0501234567"/>
+      </div>
+      <div>
+        <div class="field-label">מייל</div>
+        <input type="email" id="f-email" placeholder="name@mail.com"/>
+      </div>
+    </div>
+    <div class="row2" style="margin-top:10px">
+      <div>
+        <div class="field-label">עיר</div>
+        <input type="text" id="f-city" placeholder="תל אביב"/>
+      </div>
+      <div>
+        <div class="field-label">סטטוס</div>
+        <select id="f-status">
+          <option value="new">חדש</option>
+          <option value="contacted">יצרתי קשר</option>
+          <option value="interested">מתעניין</option>
+          <option value="negotiation">במשא ומתן</option>
+          <option value="deposit">שילם מקדמה</option>
+          <option value="closed">סגרתי עסקה</option>
+          <option value="irrelevant">לא רלוונטי</option>
+        </select>
+      </div>
+    </div>
+    <div class="field-label">מתי לחזור?</div>
+    <input type="date" id="f-date"/>
+    <div class="section-title">פרטי עסקה</div>
+    <div class="row2">
+      <div>
+        <div class="field-label">מספר פאנלים</div>
+        <input type="number" id="f-panels" placeholder="10" min="0"/>
+      </div>
+      <div>
+        <div class="field-label">מחיר (₪)</div>
+        <input type="number" id="f-price" placeholder="50000" min="0"/>
+      </div>
+    </div>
+    <div class="row2" style="margin-top:10px">
+      <div>
+        <div class="field-label">נושא / מוצר</div>
+        <input type="text" id="f-topic" placeholder="מערכת סולארית..."/>
+      </div>
+      <div>
+        <div class="field-label">מקדמה (₪)</div>
+        <input type="number" id="f-deposit-amt" placeholder="5000" min="0"/>
+      </div>
+    </div>
+    <div class="field-label">הערות</div>
+    <textarea id="f-notes" placeholder="מה דיברנו?"></textarea>
+    <div class="sheet-actions">
+      <button class="btn-cancel" onclick="closeFormSheet()">ביטול</button>
+      <button class="btn-main" onclick="saveLead()">שמור ליד</button>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Sheet -->
+<div class="sheet-overlay" id="detail-overlay" onclick="closeDetail()"></div>
+<div class="sheet" id="detail-sheet">
+  <div class="sheet-handle"></div>
+  <div class="detail-avatar-row">
+    <div class="detail-avatar" id="d-avatar">?</div>
+    <div>
+      <div class="detail-name" id="d-name"></div>
+      <div class="detail-status" id="d-status"></div>
+    </div>
+  </div>
+  <div class="quick-actions" id="d-quick-actions"></div>
+  <div class="detail-fields" id="d-fields"></div>
+  <div class="detail-mgmt">
+    <button class="dmgmt-btn" onclick="editFromDetail()">✏️ ערוך</button>
+    <button class="dmgmt-btn" onclick="openStatusFromDetail(event)">🔄 שנה סטטוס</button>
+    <button class="dmgmt-btn" onclick="openDateFromDetail(event)">📅 עדכן תאריך</button>
+    <button class="dmgmt-btn" onclick="composeMsg()">💬 נסח הודעה</button>
+    <button class="dmgmt-btn danger" onclick="deleteLead()">🗑️ מחק</button>
+  </div>
+</div>
+
+<!-- Import Sheet -->
+<div class="sheet-overlay" id="import-overlay" onclick="closeImport()"></div>
+<div class="sheet" id="import-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <span class="sheet-title">ייבא מ-Excel</span>
+    <button class="sheet-close" onclick="closeImport()">✕</button>
+  </div>
+  <div class="sheet-body">
+    <p style="font-size:14px;color:var(--text2);margin-bottom:12px;line-height:1.6">
+      העלה קובץ <strong>.xlsx</strong> או <strong>.csv</strong> עם עמודות:<br>
+      שם, טלפון, מייל, עיר, נושא, פאנלים, מחיר, מקדמה, תאריך, סטטוס, הערות<br>
+      <span style="font-size:12px;color:var(--text3)">עמודת שם בלבד חובה.</span>
+    </p>
+    <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+      <input type="file" id="file-input" accept=".csv,.xlsx,.xls" style="display:none" onchange="handleFile(event)"/>
+      📂 לחץ לבחירת קובץ
+    </div>
+    <div class="import-preview" id="import-preview" style="display:none"></div>
+    <div class="sheet-actions" style="margin-top:14px">
+      <button class="btn-cancel" onclick="closeImport()">ביטול</button>
+      <button class="btn-main" id="btn-confirm-import" style="display:none" onclick="confirmImport()">ייבא</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+const SL = {new:'חדש',contacted:'יצרתי קשר',interested:'מתעניין',negotiation:'במשא ומתן',deposit:'שילם מקדמה',closed:'סגרתי עסקה',irrelevant:'לא רלוונטי'};
+const SC = {new:'s-new',contacted:'s-contacted',interested:'s-interested',negotiation:'s-negotiation',deposit:'s-deposit',closed:'s-closed',irrelevant:'s-irrelevant'};
+const SM = {'חדש':'new','יצרתי קשר':'contacted','מתעניין':'interested','במשא ומתן':'negotiation','שילם מקדמה':'deposit','סגרתי עסקה':'closed','לא רלוונטי':'irrelevant'};
+const AV = ['av-0','av-1','av-2','av-3','av-4'];
+const WA_P = `<svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>`;
+const CALL_P = `<svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>`;
+
+let leads = [], filter = 'all', editId = null, selId = null, popTarget = null, pendingImport = [];
+
+function cp(p){ return p ? p.replace(/[\s\-\+\(\)]/g,'') : ''; }
+function waLink(p,n){ const c=cp(p); return c?`https://wa.me/${c}?text=${encodeURIComponent('היי '+n+' מה שלומך?\nעמרי מסולאראדג\'')}`:''; }
+function callLink(p){ const c=cp(p); return c?`tel:+${c}`:''; }
+function initials(n){ return n.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase()||'?'; }
+function fmt(n){ return n?'₪'+Number(n).toLocaleString('he-IL'):''; }
+function addDays(n){ const d=new Date(); d.setDate(d.getDate()+n); return d.toISOString().split('T')[0]; }
+
+function load(){
+  try{ leads=JSON.parse(localStorage.getItem('leads_crm')||'[]'); }catch(e){ leads=[]; }
+  render();
+}
+function save(){ localStorage.setItem('leads_crm',JSON.stringify(leads)); }
+
+function urgency(d){
+  if(!d)return 'future';
+  const t=new Date();t.setHours(0,0,0,0);
+  const dd=new Date(d);dd.setHours(0,0,0,0);
+  const diff=Math.round((dd-t)/86400000);
+  if(diff<0)return 'urgent'; if(diff===0)return 'today'; if(diff<=7)return 'upcoming'; return 'future';
+}
+function fmtDate(d){
+  if(!d)return '';
+  const t=new Date();t.setHours(0,0,0,0);
+  const dd=new Date(d);dd.setHours(0,0,0,0);
+  const diff=Math.round((dd-t)/86400000);
+  if(diff<-1)return 'לפני '+Math.abs(diff)+' ימים';
+  if(diff===-1)return 'אתמול'; if(diff===0)return 'היום'; if(diff===1)return 'מחר';
+  if(diff<=7)return 'בעוד '+diff+' ימים';
+  return dd.toLocaleDateString('he-IL',{day:'numeric',month:'short'});
+}
+
+function setFilter(f,el){
+  filter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+function render(){
+  document.getElementById('today-date').textContent = new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long'});
+  const urg=leads.filter(l=>urgency(l.date)==='urgent').length;
+  const wk=leads.filter(l=>['today','upcoming'].includes(urgency(l.date))).length;
+  document.getElementById('st-total').textContent=leads.length;
+  document.getElementById('st-urgent').textContent=urg;
+  document.getElementById('st-week').textContent=wk;
+
+  let sorted=[...leads].sort((a,b)=>{const o={urgent:0,today:1,upcoming:2,future:3};return(o[urgency(a.date)]||3)-(o[urgency(b.date)]||3);});
+  if(filter!=='all')sorted=sorted.filter(l=>urgency(l.date)===filter);
+
+  const el=document.getElementById('leads-list');
+  if(!sorted.length){el.innerHTML='<div class="empty"><div class="empty-icon">📋</div>אין לידים עדיין</div>';return;}
+  el.innerHTML=sorted.map(l=>{
+    const u=urgency(l.date), av=AV[Math.abs(l.id)%5];
+    const dc='d-'+u;
+    const sub=[l.city,l.panels?l.panels+' פאנלים':'',l.price?fmt(l.price):''].filter(Boolean).join(' · ');
+    const ph=cp(l.phone);
+    return `<div class="lead-card ${u}" onclick="showDetail(${l.id})">
+      <div class="avatar ${av}">${initials(l.name)}</div>
+      <div class="lead-info">
+        <div class="lead-name">${l.name}</div>
+        ${sub?`<div class="lead-sub">${sub}</div>`:''}
+      </div>
+      <div class="lead-right">
+        <div class="lead-date ${dc}">${fmtDate(l.date)}</div>
+        <button class="status-pill ${SC[l.status]||'s-new'}" onclick="event.stopPropagation();openStatusPopup(${l.id},this)">${SL[l.status]||l.status} ▾</button>
+        <div class="lead-actions-row">
+          ${ph?`<a class="circle-btn call" href="${callLink(l.phone)}" onclick="event.stopPropagation()">${CALL_P}</a>`:''}
+          ${ph?`<a class="circle-btn wa" href="${waLink(l.phone,l.name)}" onclick="event.stopPropagation()">${WA_P}</a>`:''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function showDetail(id){
+  selId=id;
+  const l=leads.find(x=>x.id===id);if(!l)return;
+  const av=AV[Math.abs(l.id)%5];
+  const avEl=document.getElementById('d-avatar');
+  avEl.className='detail-avatar '+av; avEl.textContent=initials(l.name);
+  document.getElementById('d-name').textContent=l.name;
+  document.getElementById('d-status').innerHTML=`<span class="status-pill ${SC[l.status]||'s-new'}" style="cursor:default">${SL[l.status]||l.status}</span>`;
+  const ph=cp(l.phone);
+  document.getElementById('d-quick-actions').innerHTML=`
+    ${ph?`<a class="qa-btn call-btn" href="${callLink(l.phone)}">${CALL_P}<span>חייג</span></a>`:''}
+    ${ph?`<a class="qa-btn wa-btn" href="${waLink(l.phone,l.name)}">${WA_P}<span>וואטסאפ</span></a>`:''}
+    <button class="qa-btn" onclick="openStatusFromDetail(event)"><svg viewBox="0 0 24 24" style="fill:var(--text2)"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg><span>סטטוס</span></button>
+    <button class="qa-btn" onclick="openDateFromDetail(event)"><svg viewBox="0 0 24 24" style="fill:var(--text2)"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg><span>תאריך</span></button>`;
+  const fields=[
+    l.phone?{i:'📞',k:'טלפון',v:l.phone}:null,
+    l.email?{i:'✉️',k:'מייל',v:l.email}:null,
+    l.city?{i:'📍',k:'עיר',v:l.city}:null,
+    l.topic?{i:'💬',k:'נושא',v:l.topic}:null,
+    l.panels?{i:'☀️',k:'פאנלים',v:l.panels+" יח'"}:null,
+    l.price?{i:'💰',k:'מחיר',v:fmt(l.price)}:null,
+    l.depositAmt?{i:'🤝',k:'מקדמה',v:fmt(l.depositAmt)}:null,
+    l.date?{i:'📅',k:'לחזור',v:fmtDate(l.date)}:null,
+    l.notes?{i:'📝',k:'הערות',v:l.notes}:null,
+  ].filter(Boolean);
+  document.getElementById('d-fields').innerHTML=fields.map(f=>`<div class="detail-row"><div class="detail-icon">${f.i}</div><div><div class="detail-key">${f.k}</div><div class="detail-val">${f.v}</div></div></div>`).join('');
+  openSheet('detail');
+}
+function closeDetail(){ closeSheet('detail'); selId=null; }
+
+function openStatusPopup(id,anchor){
+  closePopups();
+  popTarget=id;
+  const popup=document.getElementById('status-popup');
+  const rect=anchor.getBoundingClientRect();
+  popup.style.top=(rect.bottom+window.scrollY+4)+'px';
+  popup.style.right=(document.body.clientWidth-rect.right)+'px';
+  popup.style.left='auto';
+  document.getElementById('status-overlay').classList.add('open');
+  popup.classList.add('open');
+}
+function openStatusFromDetail(e){
+  closeDetail();
+  setTimeout(()=>{
+    popTarget=selId;
+    const popup=document.getElementById('status-popup');
+    popup.style.top='40%'; popup.style.left='50%'; popup.style.right='auto';
+    popup.style.transform='translateX(-50%)';
+    document.getElementById('status-overlay').classList.add('open');
+    popup.classList.add('open');
+  },100);
+}
+async function setStatus(s){
+  const id=popTarget||selId;if(!id)return;
+  const l=leads.find(x=>x.id===id);
+  if(l){l.status=s;save();render();}
+  closePopups();
+  toast('✅ סטטוס עודכן');
+}
+function openDateFromDetail(e){
+  closeDetail();
+  setTimeout(()=>{
+    const popup=document.getElementById('date-popup');
+    popup.style.top='40%'; popup.style.left='50%'; popup.style.right='auto';
+    popup.style.transform='translateX(-50%)';
+    document.getElementById('date-overlay').classList.add('open');
+    popup.classList.add('open');
+  },100);
+}
+function setDate(n){
+  const id=popTarget||selId;if(!id)return;
+  const l=leads.find(x=>x.id===id);
+  if(l){l.date=addDays(n);save();render();}
+  closePopups();
+  toast('📅 תאריך עודכן');
+}
+function setCustomDate(){
+  const val=document.getElementById('custom-date-input').value;if(!val)return;
+  const id=popTarget||selId;if(!id)return;
+  const l=leads.find(x=>x.id===id);
+  if(l){l.date=val;save();render();}
+  closePopups();
+  toast('📅 תאריך עודכן');
+}
+function closePopups(){
+  ['status-popup','date-popup'].forEach(id=>{const p=document.getElementById(id);p.classList.remove('open');p.style.transform='';});
+  ['status-overlay','date-overlay'].forEach(id=>document.getElementById(id).classList.remove('open'));
+}
+
+function openAddSheet(){
+  editId=null;
+  document.getElementById('form-title').textContent='ליד חדש';
+  ['f-name','f-phone','f-email','f-city','f-topic','f-notes','f-panels','f-price','f-deposit-amt'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('f-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('f-status').value='new';
+  openSheet('form');
+}
+function editFromDetail(){
+  const l=leads.find(x=>x.id===selId);if(!l)return;
+  closeDetail();
+  setTimeout(()=>{
+    editId=l.id;
+    document.getElementById('form-title').textContent='עריכת ליד';
+    document.getElementById('f-name').value=l.name||'';
+    document.getElementById('f-phone').value=l.phone||'';
+    document.getElementById('f-email').value=l.email||'';
+    document.getElementById('f-city').value=l.city||'';
+    document.getElementById('f-topic').value=l.topic||'';
+    document.getElementById('f-date').value=l.date||'';
+    document.getElementById('f-status').value=l.status||'new';
+    document.getElementById('f-notes').value=l.notes||'';
+    document.getElementById('f-panels').value=l.panels||'';
+    document.getElementById('f-price').value=l.price||'';
+    document.getElementById('f-deposit-amt').value=l.depositAmt||'';
+    openSheet('form');
+  },120);
+}
+function closeFormSheet(){ closeSheet('form'); }
+function saveLead(){
+  const name=document.getElementById('f-name').value.trim();
+  if(!name){alert('נא להזין שם');return;}
+  const lead={
+    id:editId||Date.now(), name,
+    phone:document.getElementById('f-phone').value.trim(),
+    email:document.getElementById('f-email').value.trim(),
+    city:document.getElementById('f-city').value.trim(),
+    topic:document.getElementById('f-topic').value.trim(),
+    date:document.getElementById('f-date').value,
+    status:document.getElementById('f-status').value,
+    notes:document.getElementById('f-notes').value.trim(),
+    panels:document.getElementById('f-panels').value.trim(),
+    price:document.getElementById('f-price').value.trim(),
+    depositAmt:document.getElementById('f-deposit-amt').value.trim(),
+  };
+  if(editId){const i=leads.findIndex(l=>l.id===editId);if(i>-1)leads[i]=lead;}
+  else leads.push(lead);
+  save();closeFormSheet();render();
+  toast(editId?'✅ ליד עודכן':'✅ ליד נשמר!');
+}
+function deleteLead(){
+  if(!selId||!confirm('למחוק את הליד?'))return;
+  leads=leads.filter(l=>l.id!==selId);
+  save();closeDetail();render();
+  toast('🗑️ נמחק','#D84030');
+}
+function composeMsg(){
+  const l=leads.find(x=>x.id===selId);if(!l)return;
+  const msg=encodeURIComponent(`היי ${l.name} מה שלומך?\nעמרי מסולאראדג'`);
+  const ph=cp(l.phone);
+  if(ph)window.open(`https://wa.me/${ph}?text=${msg}`,'_blank');
+  closeDetail();
+}
+
+// Export
+function exportExcel(){
+  if(!leads.length){toast('אין לידים לייצוא','#D84030');return;}
+  const cols=['שם','טלפון','מייל','עיר','נושא','פאנלים','מחיר','מקדמה','תאריך','סטטוס','הערות'];
+  const rows=leads.map(l=>[l.name,l.phone,l.email,l.city,l.topic,l.panels,l.price,l.depositAmt,l.date,SL[l.status]||l.status,l.notes]);
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet([cols,...rows]);
+  XLSX.utils.book_append_sheet(wb,ws,'לידים');
+  XLSX.writeFile(wb,'leads_'+new Date().toISOString().split('T')[0]+'.xlsx');
+  toast('✅ מוריד...');
+}
+
+// Import
+function openImport(){
+  pendingImport=[];
+  document.getElementById('import-preview').style.display='none';
+  document.getElementById('btn-confirm-import').style.display='none';
+  document.getElementById('drop-zone').textContent='📂 לחץ לבחירת קובץ';
+  const fi=document.createElement('input');fi.type='file';fi.id='file-input';fi.accept='.csv,.xlsx,.xls';fi.style.display='none';fi.onchange=handleFile;
+  document.getElementById('drop-zone').innerHTML='';document.getElementById('drop-zone').appendChild(fi);
+  document.getElementById('drop-zone').appendChild(document.createTextNode('📂 לחץ לבחירת קובץ'));
+  document.getElementById('drop-zone').onclick=()=>document.getElementById('file-input').click();
+  openSheet('import');
+}
+function closeImport(){ closeSheet('import'); }
+function handleFile(e){ const f=e.target.files[0];if(f)parseFile(f); }
+function parseFile(file){
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const wb=XLSX.read(e.target.result,{type:'binary'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+      if(!rows.length){toast('הקובץ ריק','#D84030');return;}
+      const cm={'שם':'name','טלפון':'phone','מייל':'email','עיר':'city','נושא':'topic','פאנלים':'panels','מחיר':'price','מקדמה':'depositAmt','תאריך':'date','סטטוס':'status','הערות':'notes'};
+      pendingImport=rows.map(r=>{
+        const l={id:Date.now()+Math.random(),name:'',phone:'',email:'',city:'',topic:'',panels:'',price:'',depositAmt:'',date:'',status:'new',notes:''};
+        Object.entries(r).forEach(([k,v])=>{const m=cm[k.trim()]||k;if(m==='status')l.status=SM[String(v).trim()]||'new';else if(m in l)l[m]=String(v).trim();});
+        return l;
+      }).filter(l=>l.name);
+      if(!pendingImport.length){toast('לא נמצאו שורות עם שם','#D84030');return;}
+      const prev=pendingImport.slice(0,5);
+      document.getElementById('import-preview').innerHTML=`<div>נמצאו <strong>${pendingImport.length}</strong> לידים:</div><table><tr><th>שם</th><th>טלפון</th><th>עיר</th><th>סטטוס</th></tr>${prev.map(l=>`<tr><td>${l.name}</td><td>${l.phone}</td><td>${l.city}</td><td>${SL[l.status]||l.status}</td></tr>`).join('')}</table>`;
+      document.getElementById('import-preview').style.display='block';
+      document.getElementById('btn-confirm-import').style.display='block';
+      document.getElementById('drop-zone').textContent='✅ '+file.name;
+    }catch(err){toast('שגיאה בקובץ','#D84030');}
+  };
+  reader.readAsBinaryString(file);
+}
+function confirmImport(){
+  let added=0;
+  pendingImport.forEach(l=>{
+    if(!leads.find(x=>x.name===l.name&&x.phone===l.phone)){leads.push({...l,id:Date.now()+Math.random()});added++;}
+  });
+  save();closeImport();render();
+  toast(`✅ יובאו ${added} לידים`);
+}
+
+// Sheet helpers
+function openSheet(name){
+  document.getElementById(name+'-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById(name+'-sheet').classList.add('open'),10);
+}
+function closeSheet(name){
+  document.getElementById(name+'-sheet').classList.remove('open');
+  setTimeout(()=>document.getElementById(name+'-overlay').classList.remove('open'),300);
+}
+
+function toast(msg,bg='#1A1A18'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.background=bg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+load();
+document.getElementById('today-date').textContent=new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long'});
+</script>
+</body>
+</html>
